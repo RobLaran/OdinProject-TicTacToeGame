@@ -17,6 +17,8 @@ function GameBoard() {
 
     const getBoard = () => board
 
+    const getCellValue = (row, column) => board[row][column].value()
+
     const displayBoard = () => {
         const boardWithCellValues = []
 
@@ -35,7 +37,7 @@ function GameBoard() {
         board[row][column].setPlayerToken(playerToken)
     }
 
-    return { generateBoard, getBoard, displayBoard, addPlayerToken }
+    return { generateBoard, getBoard, getCellValue, displayBoard, addPlayerToken }
 }
 
 function Cell() {
@@ -50,8 +52,18 @@ function Cell() {
     return { setPlayerToken, value }
 }
 
-function Player(playerToken) {
+function Player(name, token) {
+    let playerName = ""
     let playerValue = 0
+
+    const setPlayerName = (newName) => {
+        if(typeof newName === typeof "") {
+            playerName = newName
+            return
+        }
+
+        return "Invalid name"
+    }
 
     const setToken = (playerToken) => {
         if(playerToken == 1 || playerToken == 2) {
@@ -62,13 +74,52 @@ function Player(playerToken) {
         return "Invalid token"
     }
 
-    const token = () => playerValue ?? "Token not set" 
+    const getToken = () => playerValue ?? "Token not set"
+    const getName = () => playerName ?? "No name"
 
-    setToken(playerToken)
+    setPlayerName(name)
+    setToken(token)
 
-    return { setToken, token };
+    return { setPlayerName, setToken, getName, getToken };
 }
 
 function GameController() {
+    const gameBoard = GameBoard()
 
+    const players = [Player("One",1), Player("Two",2)]
+
+    let randomPick = () => Math.floor(Math.random() * players.length)
+
+    let activePlayer = players[randomPick()]
+
+    const getActivePlayer = () => activePlayer
+
+    const setNewRound = () => {
+        gameBoard.displayBoard()
+
+        console.log(`Player ${activePlayer.getName()}'s turn.`)
+    }
+
+    const playRound = (row, column) => {
+        if(gameBoard.getCellValue(row, column) == 0) {
+            gameBoard.addPlayerToken(row, column, activePlayer.getToken())
+
+            console.log(`${activePlayer.getName()} place at row:${row}, column: ${column}`)
+
+            changeTurn()
+            setNewRound()
+       } else {
+            console.log("Occupied! Try Again.")
+       }
+    }
+
+    const changeTurn = () => {
+        activePlayer = activePlayer === players[0] ? players[1] : players[0]
+    }
+
+    gameBoard.generateBoard()
+    
+    setNewRound()
+
+    return { getActivePlayer, setNewRound, playRound }
 }
