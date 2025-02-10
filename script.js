@@ -83,8 +83,42 @@ function Player(name, token) {
     return { setPlayerName, setToken, getName, getToken };
 }
 
+function WinCondition() {
+    const rows = 3
+    const columns = 3
+    let gameBoard = []
+    let playerToken = 0
+
+    const setGameBoard = (board) => gameBoard = board 
+
+    const setPlayerToken = (token) => playerToken = new String(token).repeat(3)
+
+    // ? figure out which player won
+    // ? check columns and diagonal conditions
+    const checkRows = () => {
+        for(let i = 0; i < rows; i++) {
+            let pattern = ""
+            for(let j = 0; j < columns; j++) {
+                pattern += gameBoard[i][j].value()
+            }
+
+            console.log(playerToken, pattern)
+
+            if(pattern === "111" || pattern === "222") return true
+        }   
+
+        return false
+    }
+
+    const checkConditions = () => checkRows()
+
+    return { setGameBoard, setPlayerToken, checkConditions }
+}
+
 function GameController() {
     const gameBoard = GameBoard()
+    
+    const winCondition = WinCondition()
 
     const players = [Player("One",1), Player("Two",2)]
 
@@ -98,8 +132,12 @@ function GameController() {
         gameBoard.displayBoard()
 
         console.log(`Player ${activePlayer.getName()}'s turn.`)
-    }
+        
+        winCondition.setPlayerToken(activePlayer.getToken())
 
+        console.log(winCondition.checkConditions())
+    }
+    
     const playRound = (row, column) => {
         if(gameBoard.getCellValue(row, column) == 0) {
             gameBoard.addPlayerToken(row, column, activePlayer.getToken())
@@ -118,6 +156,8 @@ function GameController() {
     }
 
     gameBoard.generateBoard()
+
+    winCondition.setGameBoard(gameBoard.getBoard())
     
     setNewRound()
 
