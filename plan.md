@@ -26,3 +26,7 @@ create vertical pattern in each column
 create diagonal pattern
 check if player matches the pattern
 set player pattern
+
+DrawCondition
+count all the cells
+draw if all cells are occupied
