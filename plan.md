@@ -19,3 +19,9 @@ get active player
 render new round
 play round
 switch player turn
+
+WinCondition
+create horizontal pattern in each row
+create vertical pattern in each column
+create diagonal pattern
+check if player matches the pattern

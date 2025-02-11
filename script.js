@@ -87,11 +87,11 @@ function WinCondition() {
     const rows = 3
     const columns = 3
     let gameBoard = []
-    let playerToken = 0
+    let player = null
 
     const setGameBoard = (board) => gameBoard = board 
 
-    const setPlayerToken = (token) => playerToken = new String(token).repeat(3)
+    const setActivePlayer = (activePlayer) => player = new String(activePlayer.getToken()).repeat(3)
 
     // ? figure out which player won
     // ? check columns and diagonal conditions
@@ -102,17 +102,35 @@ function WinCondition() {
                 pattern += gameBoard[i][j].value()
             }
 
-            console.log(playerToken, pattern)
-
-            if(pattern === "111" || pattern === "222") return true
+            if(pattern === player) return true
         }   
 
         return false
     }
 
-    const checkConditions = () => checkRows()
+    const checkColumns = () => {
+        for(let i = 0; i < rows; i++) {
+            let pattern = ""
+            for(let j = 0; j < columns; j++) {
+                pattern += gameBoard[j][i].value()
+            }
 
-    return { setGameBoard, setPlayerToken, checkConditions }
+            if(pattern === player) return true
+        }
+
+        return false
+    }
+
+    const checkDiagonals = () => {
+        const leftDiagonal = `${gameBoard[0][0].value()}${gameBoard[1][1].value()}${gameBoard[2][2].value()}`
+        const rightDiagonal = `${gameBoard[0][2].value()}${gameBoard[1][1].value()}${gameBoard[2][0].value()}`
+
+        return leftDiagonal === player || rightDiagonal === player
+    }
+
+    const checkConditions = () => checkRows() || checkColumns() || checkDiagonals()
+
+    return { setGameBoard, setActivePlayer, checkConditions }
 }
 
 function GameController() {
@@ -131,21 +149,25 @@ function GameController() {
     const setNewRound = () => {
         gameBoard.displayBoard()
 
-        console.log(`Player ${activePlayer.getName()}'s turn.`)
-        
-        winCondition.setPlayerToken(activePlayer.getToken())
-
-        console.log(winCondition.checkConditions())
+        console.log(`${activePlayer.getName()}'s turn.`)
     }
     
     const playRound = (row, column) => {
         if(gameBoard.getCellValue(row, column) == 0) {
             gameBoard.addPlayerToken(row, column, activePlayer.getToken())
-
+            
             console.log(`${activePlayer.getName()} place at row:${row}, column: ${column}`)
 
-            changeTurn()
-            setNewRound()
+            winCondition.setActivePlayer(activePlayer)
+
+            console.log(winCondition.checkConditions())
+
+            if(winCondition.checkConditions()) {
+                gameOver()
+            } else {
+                changeTurn()
+                setNewRound()
+            }
        } else {
             console.log("Occupied! Try Again.")
        }
@@ -153,6 +175,10 @@ function GameController() {
 
     const changeTurn = () => {
         activePlayer = activePlayer === players[0] ? players[1] : players[0]
+    }
+
+    const gameOver = () => {
+        console.log(`Congratulations ${activePlayer.getName()}! You won the game.`)
     }
 
     gameBoard.generateBoard()
