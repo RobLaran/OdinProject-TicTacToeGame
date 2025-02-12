@@ -227,5 +227,21 @@ function GameController() {
     return { getActivePlayer, setNewRound, playRound, setPlayerNames }
 }
 
-const controller = GameController()
+function ScreenController() {
+    const buttons = document.querySelectorAll(".cell > button")
 
+    console.log(buttons)
+
+    buttons.forEach(element => {
+        
+        element.addEventListener("click", () => {
+            if(element.style.backgroundColor == "blue") {
+                element.style.backgroundColor = "red"
+            } else {
+                element.style.backgroundColor = "blue"
+            }
+        })
+    })
+}
+
+ScreenController()

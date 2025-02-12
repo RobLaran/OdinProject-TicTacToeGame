@@ -12,7 +12,7 @@ Player
 set player value or token
 get player value or token
 
-Controller
+GameController
 set up game board
 set up players
 get active player
@@ -30,3 +30,13 @@ set player pattern
 DrawCondition
 count all the cells
 draw if all cells are occupied
+
+GameConditions
+check WinCondition
+check DrawCondition
+
+ScreenController
+set up buttons
+display player turns
+
+
