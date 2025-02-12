@@ -1,16 +1,35 @@
 body {
     margin: 0;
     padding: 0;
+
+    text-align: center;
 }
 
 .board {
+    margin: auto;
+
+    border: 1px solid green;
+
+    width: 500px;
+    height: 500px;
+
     display: grid;
 
-    grid-template-columns: repeat(3, minmax(100px, 220px));
-    grid-template-rows: repeat(3, minmax(100px, 220px));
+    grid-template-columns: repeat(3, minmax(100px, 1fr));
+    grid-template-rows: repeat(3, minmax(100px, 1fr));
 }
 
-.cell, button {
+.cell {
     width: 100%;       
     height: 100%;
+
+    font-size: 2rem;
+}
+
+.cell.X {
+    color: red;
+}
+
+.cell.O {
+    color: blue;
 }

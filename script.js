@@ -10,7 +10,7 @@ function GameBoard() {
             board[i] = []
 
             for(let j = 0; j < columns; j++) {
-                board[i][j] = Cell()
+                board[i][j] = Cell(i, j)
             }
         }
     }
@@ -35,6 +35,7 @@ function GameBoard() {
 
     const addPlayerToken = (row, column, playerToken) => {
         board[row][column].addValue(playerToken)
+        board[row][column].getPosition().occupied = true
     }
 
     generateBoard()
@@ -42,8 +43,13 @@ function GameBoard() {
     return { generateBoard, getBoard, getCellValue, displayBoard, addPlayerToken }
 }
 
-function Cell() {
+function Cell(row, column) {
     let cellValue = " "
+    let cellPosition = {
+        cellRow: row,
+        cellColumn: column,
+        occupied: false
+    }
 
     const addValue = (value) => {
         cellValue = value
@@ -51,7 +57,9 @@ function Cell() {
 
     const value = () => cellValue 
 
-    return { addValue, value }
+    const getPosition = () => cellPosition
+
+    return { addValue, value, getPosition }
 }
 
 function Player(name, token) {
@@ -185,27 +193,19 @@ function GameController() {
     const setNewRound = () => {
         board.displayBoard()
 
-        console.log(`${activePlayer.getName()}'s turn. Sign('${activePlayer.getToken()}')`)
+        return `${activePlayer.getName()}'s turn. Sign('${activePlayer.getToken()}')`
     }
     
     const playRound = (row, column) => {
-        if(board.getCellValue(row, column) == " ") {
-            board.addPlayerToken(row, column, activePlayer.getToken())
+        board.addPlayerToken(row, column, activePlayer.getToken())
 
-            console.log(`${activePlayer.getName()} place at row: ${row}, column: ${column}`)
+        if(!gameCondition.checkWin() && !gameCondition.checkDraw()) {
+            changeTurn()
 
-            if(gameCondition.checkWin()) {
-                board.displayBoard()
-                gameCondition.gameOver(activePlayer.getName())
-            } else if(gameCondition.checkDraw()) {
-                console.log("GAME DRAW!")
-            } else {
-                changeTurn()
-                setNewRound()
-            }
-       } else {
-            console.log("Occupied! Try Again.")
-       }
+            setNewRound()
+        }
+
+        console.log(`${activePlayer.getName()} place at row: ${row}, column: ${column}`)
     }
 
     const changeTurn = () => {
@@ -224,24 +224,102 @@ function GameController() {
 
     setNewRound()
 
-    return { getActivePlayer, setNewRound, playRound, setPlayerNames }
+    return { getActivePlayer,
+            changeTurn,
+            setNewRound, 
+            playRound, 
+            setPlayerNames, 
+            gameCondition,
+            getBoard: board.getBoard }
 }
 
 function ScreenController() {
-    const buttons = document.querySelectorAll(".cell > button")
+    const game = GameController()
 
-    console.log(buttons)
+    let boardDiv = document.querySelector(".board")
 
-    buttons.forEach(element => {
-        
-        element.addEventListener("click", () => {
-            if(element.style.backgroundColor == "blue") {
-                element.style.backgroundColor = "red"
-            } else {
-                element.style.backgroundColor = "blue"
-            }
+    let buttons = null
+
+    let message = document.querySelector(".message")
+
+    const setupGame = () => {
+        const board = game.getBoard()
+
+        message.innerText = `${game.getActivePlayer().getName()}'s turn. Sign ('${game.getActivePlayer().getToken()}')`
+
+        board.forEach(row => {
+            row.forEach(cell => {
+                let button = document.createElement("button")
+
+                button.classList.add("cell")
+
+                button.innerText = cell.value()
+
+                button.dataset.row = cell.getPosition().cellRow
+                button.dataset.column = cell.getPosition().cellColumn
+
+                button.dataset.occupied = false
+
+                boardDiv.appendChild(button)
+            })            
         })
-    })
+
+        buttons = document.querySelectorAll(".cell")
+
+
+        clickHandler(board)
+
+    }
+
+    const clickHandler = (board) => {
+        const buttons = document.querySelectorAll(".cell")
+
+        buttons.forEach(button => {
+            button.addEventListener("click", () => {
+                
+                const row = button.dataset.row
+                const column = button.dataset.column
+                
+                const occupied = JSON.parse(button.dataset.occupied)
+                
+                if(!occupied) {
+                    button.innerText = game.getActivePlayer().getToken()
+                    
+                    button.dataset.occupied = true
+
+                    button.classList.add(button.innerText)
+
+                    game.playRound(row, column)
+
+                    
+                    message.innerText = `${game.getActivePlayer().getName()}'s turn. Sign ('${game.getActivePlayer().getToken()}')`
+                } else {
+                    message.innerText = "Occupied! Try Again."
+                }
+                
+                checkCondition()
+            })
+        })
+    }
+
+    const checkCondition = () => {
+        buttons = document.querySelectorAll(".cell")
+
+        if(game.gameCondition.checkWin()) {
+            buttons.forEach(button => button.disabled = true)
+    
+            message.innerText = `Congratulations ${game.getActivePlayer().getName()}! You won the game.`
+        } else if(game.gameCondition.checkDraw()) {
+            buttons.forEach(button => button.disabled = true)
+                
+            message.innerText = "GAME DRAW!"
+        }
+    }
+
+    
+
+    return { setupGame }
 }
 
-ScreenController()
+ScreenController().setupGame()
+
