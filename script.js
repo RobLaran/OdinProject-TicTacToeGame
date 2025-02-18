@@ -19,6 +19,14 @@ function GameBoard() {
 
     const getCellValue = (row, column) => board[row][column].value()
 
+    const clearBoard = () => {
+        for(let i = 0; i < rows; i++) {
+            for(let j = 0; j < columns; j++) {
+                board[i][j].clear()
+            }
+        }
+    }
+
     const displayBoard = () => {
         const boardWithCellValues = []
 
@@ -40,7 +48,7 @@ function GameBoard() {
 
     generateBoard()
 
-    return { generateBoard, getBoard, getCellValue, displayBoard, addPlayerToken }
+    return { generateBoard, getBoard, getCellValue, displayBoard, addPlayerToken, clearBoard }
 }
 
 function Cell(row, column) {
@@ -59,7 +67,9 @@ function Cell(row, column) {
 
     const getPosition = () => cellPosition
 
-    return { addValue, value, getPosition }
+    const clear = () => cellValue = " "
+
+    return { addValue, value, getPosition, clear }
 }
 
 function Player(name, token) {
@@ -195,7 +205,7 @@ function GameController() {
 
         return `${activePlayer.getName()}'s turn. Sign('${activePlayer.getToken()}')`
     }
-    
+
     const playRound = (row, column) => {
         board.addPlayerToken(row, column, activePlayer.getToken())
 
@@ -208,21 +218,21 @@ function GameController() {
         console.log(`${activePlayer.getName()} place at row: ${row}, column: ${column}`)
     }
 
+    const reset = () => {
+        board.clearBoard()
+    }
+
     const changeTurn = () => {
         activePlayer = activePlayer === players[0] ? players[1] : players[0]
     }
 
-    const setPlayerNames = (playerOneName, playerTwoName) => {
+    const setPlayerNames = (playerOneName="", playerTwoName="") => {
         players = [Player(playerOneName,"X"), Player(playerTwoName,"O")]
 
         activePlayer = players[randomPick()]
     }
 
-    setPlayerNames("Rob", "Blanche")
-
     board.generateBoard()
-
-    setNewRound()
 
     return { getActivePlayer,
             changeTurn,
@@ -230,6 +240,7 @@ function GameController() {
             playRound, 
             setPlayerNames, 
             gameCondition,
+            reset,
             getBoard: board.getBoard }
 }
 
@@ -242,10 +253,14 @@ function ScreenController() {
 
     let message = document.querySelector(".message")
 
+    let playerDialog = document.querySelector(".setup-players.dialog")
+
+    const startGame = () => {
+        playerDialog.showModal()
+    }
+
     const setupGame = () => {
         const board = game.getBoard()
-
-        message.innerText = `${game.getActivePlayer().getName()}'s turn. Sign ('${game.getActivePlayer().getToken()}')`
 
         board.forEach(row => {
             row.forEach(cell => {
@@ -269,10 +284,38 @@ function ScreenController() {
 
         clickHandler(board)
 
+        startGame()
+    }
+
+    const restartGame = () => {
+        game.reset()
+
+        game.changeTurn()
+    }
+
+    const exitGame = () => {
+        restartGame()
+
+        startGame()
+    }
+
+    const displayTurn = () => {
+        let symbol = document.createElement("span")
+
+        symbol.innerText = `${game.getActivePlayer().getToken()}`
+        symbol.classList.add(game.getActivePlayer().getToken())
+
+        message.innerHTML = `${game.getActivePlayer().getName()}'s turn. Symbol `
+        
+        message.appendChild(symbol)
     }
 
     const clickHandler = (board) => {
         const buttons = document.querySelectorAll(".cell")
+
+        const startGameBtn = document.querySelector(".start.btn")
+        const restartGameBtn = document.querySelector(".restart.btn")
+        const exitGameBtn = document.querySelector(".exit.btn")
 
         buttons.forEach(button => {
             button.addEventListener("click", () => {
@@ -292,13 +335,58 @@ function ScreenController() {
                     game.playRound(row, column)
 
                     
-                    message.innerText = `${game.getActivePlayer().getName()}'s turn. Sign ('${game.getActivePlayer().getToken()}')`
+                    displayTurn()
                 } else {
                     message.innerText = "Occupied! Try Again."
                 }
                 
                 checkCondition()
             })
+        })
+
+        startGameBtn.addEventListener("click", () => {
+            let playerOneName = document.querySelector("#player-one").value
+            let playerTwoName = document.querySelector("#player-two").value
+
+            game.setPlayerNames(playerOneName, playerTwoName)
+            
+            message.style = "opacity: 1;"
+            displayTurn()
+
+
+            playerDialog.close()
+        })
+
+        restartGameBtn.addEventListener("click", () => {
+            restartGame()
+
+            buttons.forEach(button => {
+                button.classList = "cell"
+                button.innerText = ""
+                button.dataset.occupied = false
+
+                if(button.disabled) {
+                    button.disabled = false
+                }
+            })
+
+            displayTurn()
+        })
+
+        exitGameBtn.addEventListener("click", () => {
+            exitGame()
+
+            buttons.forEach(button => {
+                button.classList = "cell"
+                button.innerText = ""
+                button.dataset.occupied = false
+
+                if(button.disabled) {
+                    button.disabled = false
+                }
+            })
+
+            // message.innerText = `${game.getActivePlayer().getName()}'s turn. Symbol ('${game.getActivePlayer().getToken()}')`
         })
     }
 
@@ -311,14 +399,12 @@ function ScreenController() {
             message.innerText = `Congratulations ${game.getActivePlayer().getName()}! You won the game.`
         } else if(game.gameCondition.checkDraw()) {
             buttons.forEach(button => button.disabled = true)
-                
+
             message.innerText = "GAME DRAW!"
         }
     }
 
-    
-
-    return { setupGame }
+    return { setupGame, startGame }
 }
 
 ScreenController().setupGame()

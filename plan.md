@@ -43,6 +43,7 @@
 <!-- display player turns -->
 <!-- check game conditions and display it -->
 * start up game (get player names then start game) functionality
+* in start game dialog, players can choose which type of game they play (best of 3 or best of 5) 
 * add restart functionality
 
 
